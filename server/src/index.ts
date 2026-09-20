@@ -1,5 +1,8 @@
-import express from 'express';
+﻿import express from 'express';
 import cors from 'cors';
+import path from 'node:path';
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { investigationsRouter } from './routes/investigations.js';
 
 const app = express();
@@ -15,7 +18,18 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api', investigationsRouter);
 
-// Central error handler — one failing source or upload never takes the API down.
+// Serve the built client (client/dist) from this same server process when it
+// exists, so one deployed service handles both the API and the app.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const CLIENT_DIST = path.join(__dirname, '..', '..', 'client', 'dist');
+if (existsSync(CLIENT_DIST)) {
+  app.use(express.static(CLIENT_DIST));
+  app.get(/^(?!\/api).*/, (_req, res) => {
+    res.sendFile(path.join(CLIENT_DIST, 'index.html'));
+  });
+}
+
+// Central error handler.
 app.use(
   (
     err: Error & { code?: string },
@@ -32,7 +46,8 @@ app.use(
 );
 
 app.listen(PORT, () => {
-  console.log(`\n  Digital Identity Intelligence — API`);
-  console.log(`  http://localhost:${PORT}/api/health`);
-    console.log(`  OSINT DEMO DATASET MODE · searches the bundled local CSV only, no live internet access\n`);
+  console.log('Digital Identity Intelligence — API');
+  console.log('http://localhost:' + PORT + '/api/health');
+  console.log('OSINT DEMO DATASET MODE — searches the bundled local CSV only, no live internet access');
 });
+
