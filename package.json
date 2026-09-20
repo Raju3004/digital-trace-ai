@@ -10,6 +10,7 @@
     "dev:client": "npm --prefix client run dev",
     "build": "npm --prefix server run build && npm --prefix client run build",
     "typecheck": "npm --prefix server run typecheck && npm --prefix client run typecheck",
-    "doctor": "npm --prefix server run doctor"
+    "doctor": "npm --prefix server run doctor",
+    "postinstall": "npm install --prefix server && npm install --prefix client"
   }
 }
